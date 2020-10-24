@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t wesdeitch24/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true wesdeitch24/react-test npm test
+
+after_success:
+  - docker build -t wesdeitch24/multi-client ./client
+  - docker build -t wesdeitch24/multi-nginx ./nginx
+  - docker build -t wesdeitch24/multi-server ./server
+  - docker build -t wesdeitch24/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those iages and push them to docker hub
+  - docker push wesdeitch24/multi-client
+  - docker push wesdeitch24/multi-nginx
+  - docker push wesdeitch24/multi-server
+  - docker push wesdeitch24/multi-worker
